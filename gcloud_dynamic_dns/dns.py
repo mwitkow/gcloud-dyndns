@@ -1,6 +1,7 @@
 import socket
 from typing import Set, Iterable, Optional
 
+import json
 import requests
 import requests.packages.urllib3.util.connection as urllib3_cn
 from google.cloud import dns
@@ -25,19 +26,16 @@ def resolve_addresses(dns_name: str, kind: Iterable[socket.AddressFamily] = IPV4
 
 def my_ip(kind: Iterable[socket.AddressFamily] = IPV4_6, query_host: str = "ifconfig.co") -> Set[str]:
     """
-    Uses a service such as https://ifconfig.co/ to resolve the current hosts IP addresses as they appear
+    Uses a service such as https://ipify.co/ to resolve the current hosts IP addresses as they appear
     from the internet.
     :param kind: an iterable ot the tyoes of IP address to return
     :param query_host: the host to use for querying
     :return: a set of IP address strings
     """
     ip_addresses = set()
-    _allowed_gai_family = urllib3_cn.allowed_gai_family
-    for _kind in kind:
-        # Temporarily monkey patches urllib3 so that requests uses only the type of IP address requested
-        urllib3_cn.allowed_gai_family = lambda: _kind
-        ip_addresses.add(requests.get("https://{}/ip".format(query_host)).content.strip().decode())
-    urllib3_cn.allowed_gai_family = _allowed_gai_family
+    x = requests.get("https://api.ipify.org?format=json").content.strip().decode()
+    y = json.loads(x)
+    ip_addresses.add(y['ip'])
     return ip_addresses
 
 
